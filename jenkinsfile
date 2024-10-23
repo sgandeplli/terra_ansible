@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+
+ environment {
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-sa') 
+    }
+
+    stages {
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    sh 'terraform init'
+                    sh 'terraform apply -auto-approve'
+                    // Capture the output IP addresses from Terraform
+                    def instanceIp = sh(script: 'terraform output -json instance_ip', returnStdout: true).trim()
+                    
+                    // Write the Ansible inventory file
+                    writeFile file: 'hosts', text: "[webservers]\n${instanceIp}"
+                }
+            }
+        }
+        stage('Install HTTP Service') {
+            steps {
+                script {
+                    // Run Ansible Playbook with the generated inventory file
+                    sh 'ansible-playbook -i hosts install_http.yml'
+                }
+            }
+        }
+    }
+}
