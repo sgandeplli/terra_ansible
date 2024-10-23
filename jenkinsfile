@@ -23,6 +23,16 @@ pipeline {
                 }
             }
         }
+
+     stage('Check SSH Connection') {
+            steps {
+                script {
+                    // Check if the instance is reachable via SSH
+                    def instanceIp = readFile('hosts').trim().tokenize('\n')[1]
+                    sh "ssh -o StrictHostKeyChecking=no -o BatchMode=yes ansibleuser@${instanceIp} 'exit'" // Replace 'ansibleuser' with the correct username
+                }
+            }
+        }
         stage('Install HTTP Service') {
             steps {
                 script {
