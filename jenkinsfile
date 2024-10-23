@@ -24,12 +24,17 @@ pipeline {
             }
         }
 
-     stage('Check SSH Connection') {
+      stage('Check SSH Connection') {
             steps {
                 script {
                     // Check if the instance is reachable via SSH
                     def instanceIp = readFile('hosts').trim().tokenize('\n')[1]
-                    sh "ssh -o StrictHostKeyChecking=no -o BatchMode=yes ansibleuser@${instanceIp} 'exit'" // Replace 'ansibleuser' with the correct username
+                    echo "Checking SSH connection to ${instanceIp}..."
+                    def sshResult = sh(script: "ssh -o StrictHostKeyChecking=no -o BatchMode=yes ansibleuser@${instanceIp} 'exit'", returnStatus: true)
+                    
+                    if (sshResult != 0) {
+                        error "SSH connection to ${instanceIp} failed with status ${sshResult}. Please check your firewall rules and instance status."
+                    }
                 }
             }
         }
@@ -44,3 +49,12 @@ pipeline {
     }
 }
 
+    post {
+        failure {
+            // Cleanup or notify in case of failure
+            echo 'The pipeline has failed. Please check the logs.'
+        }
+        success {
+            echo 'The pipeline completed successfully.'
+        }
+    }
