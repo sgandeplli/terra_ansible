@@ -1,10 +1,14 @@
+
+
+
+
+
 pipeline {
     agent any
 
  environment {
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-sa') 
     }
-
     stages {
         stage('Terraform Apply') {
             steps {
@@ -29,3 +33,4 @@ pipeline {
         }
     }
 }
+
